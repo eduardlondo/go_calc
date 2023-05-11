@@ -4,9 +4,15 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"runtime"
 )
 
+func getGOMAXPROCS() int {
+	return runtime.GOMAXPROCS(0)
+}
+
 func main() {
+	fmt.Printf("Core availables are %d\n", getGOMAXPROCS())
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print(">")

@@ -64,7 +64,6 @@ func (node *SubNode) evaluate(c chan float64) {
 	first := <-leftChan
 	second := <-rightChan
 	c <- (first - second)
-	/* return first - second */
 }
 
 type TimesNode struct {
@@ -113,8 +112,6 @@ func (node *DivideNode) evaluate(c chan float64) {
 	go right.evaluate(rightChan)
 	first := <-leftChan
 	second := <-rightChan
-	/* first := left.evaluate()
-	second := right.evaluate() */
 	c <- (first / second)
 }
 
