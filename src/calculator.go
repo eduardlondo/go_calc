@@ -12,10 +12,12 @@ func createScanner(str string) Scanner {
 	return scanner
 }
 
-func eval(expr string) int {
+func eval(expr string) float64 {
 	scanner := createScanner(expr)
 	parser := Parser{scan: &scanner}
 	tree := parser.Parse()
-	result := tree.evaluate()
+	chann := make(chan float64)
+	go tree.evaluate(chann)
+	result := <-chann
 	return result
 }

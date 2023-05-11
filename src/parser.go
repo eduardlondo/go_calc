@@ -42,7 +42,7 @@ func (par *Parser) factor() AST {
 		return par.potTerm(&SqrtNode{e})
 	} else {
 		lex := t.getLex()
-		val, _ := strconv.Atoi(lex)
+		val, _ := strconv.ParseFloat(lex, 64)
 		return NumNode{val}
 	}
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type AST interface {
-	evaluate() int
+	evaluate(c chan float64)
 }
 
 type BinaryNode interface {
@@ -30,10 +30,15 @@ func (node *AddNode) GetRightSubTree() AST {
 	return node.rightTree
 }
 
-func (node *AddNode) evaluate() int {
+func (node *AddNode) evaluate(c chan float64) {
 	left := node.GetLeftSubTree()
 	right := node.GetRightSubTree()
-	return left.evaluate() + right.evaluate()
+	controller := make(chan float64, 2)
+	go left.evaluate(controller)
+	go right.evaluate(controller)
+	first := <-controller
+	second := <-controller
+	c <- (first + second)
 }
 
 type SubNode struct {
@@ -49,10 +54,17 @@ func (node *SubNode) GetRightSubTree() AST {
 	return node.rightTree
 }
 
-func (node *SubNode) evaluate() int {
+func (node *SubNode) evaluate(c chan float64) {
 	left := node.GetLeftSubTree()
 	right := node.GetRightSubTree()
-	return left.evaluate() - right.evaluate()
+	leftChan := make(chan float64)
+	rightChan := make(chan float64)
+	go left.evaluate(leftChan)
+	go right.evaluate(rightChan)
+	first := <-leftChan
+	second := <-rightChan
+	c <- (first - second)
+	/* return first - second */
 }
 
 type TimesNode struct {
@@ -68,10 +80,15 @@ func (node *TimesNode) GetRightSubTree() AST {
 	return node.rightTree
 }
 
-func (node *TimesNode) evaluate() int {
+func (node *TimesNode) evaluate(c chan float64) {
 	left := node.GetLeftSubTree()
 	right := node.GetRightSubTree()
-	return left.evaluate() * right.evaluate()
+	controller := make(chan float64, 2)
+	go left.evaluate(controller)
+	go right.evaluate(controller)
+	first := <-controller
+	second := <-controller
+	c <- (first * second)
 }
 
 type DivideNode struct {
@@ -87,18 +104,26 @@ func (node *DivideNode) GetRightSubTree() AST {
 	return node.rightTree
 }
 
-func (node *DivideNode) evaluate() int {
+func (node *DivideNode) evaluate(c chan float64) {
 	left := node.GetLeftSubTree()
 	right := node.GetRightSubTree()
-	return left.evaluate() / right.evaluate()
+	leftChan := make(chan float64)
+	rightChan := make(chan float64)
+	go left.evaluate(leftChan)
+	go right.evaluate(rightChan)
+	first := <-leftChan
+	second := <-rightChan
+	/* first := left.evaluate()
+	second := right.evaluate() */
+	c <- (first / second)
 }
 
 type NumNode struct {
-	val int
+	val float64
 }
 
-func (node NumNode) evaluate() int {
-	return node.val
+func (node NumNode) evaluate(c chan float64) {
+	c <- node.val
 }
 
 type LbyteNode struct {
@@ -114,10 +139,16 @@ func (node *LbyteNode) GetRightSubTree() AST {
 	return node.rightTree
 }
 
-func (node *LbyteNode) evaluate() int {
+func (node *LbyteNode) evaluate(c chan float64) {
 	left := node.GetLeftSubTree()
 	right := node.GetRightSubTree()
-	return left.evaluate() << right.evaluate()
+	leftChan := make(chan float64)
+	rightChan := make(chan float64)
+	go left.evaluate(leftChan)
+	go right.evaluate(rightChan)
+	first := int(<-leftChan)
+	second := int(<-rightChan)
+	c <- float64(first << second)
 }
 
 type RbyteNode struct {
@@ -133,10 +164,16 @@ func (node *RbyteNode) GetRightSubTree() AST {
 	return node.rightTree
 }
 
-func (node *RbyteNode) evaluate() int {
+func (node *RbyteNode) evaluate(c chan float64) {
 	left := node.GetLeftSubTree()
 	right := node.GetRightSubTree()
-	return left.evaluate() >> right.evaluate()
+	leftChan := make(chan float64)
+	rightChan := make(chan float64)
+	go left.evaluate(leftChan)
+	go right.evaluate(rightChan)
+	first := int(<-leftChan)
+	second := int(<-rightChan)
+	c <- float64(first >> second)
 }
 
 type ModNode struct {
@@ -152,10 +189,16 @@ func (node *ModNode) GetRightSubTree() AST {
 	return node.rightTree
 }
 
-func (node *ModNode) evaluate() int {
+func (node *ModNode) evaluate(c chan float64) {
 	left := node.GetLeftSubTree()
 	right := node.GetRightSubTree()
-	return left.evaluate() % right.evaluate()
+	leftChan := make(chan float64)
+	rightChan := make(chan float64)
+	go left.evaluate(leftChan)
+	go right.evaluate(rightChan)
+	first := int(<-leftChan)
+	second := int(<-rightChan)
+	c <- float64(first % second)
 }
 
 type PotNode struct {
@@ -171,16 +214,26 @@ func (node *PotNode) GetRightSubTree() AST {
 	return node.rightTree
 }
 
-func (node *PotNode) evaluate() int {
+func (node *PotNode) evaluate(c chan float64) {
 	left := node.GetLeftSubTree()
 	right := node.GetRightSubTree()
-	return int(math.Pow(float64(left.evaluate()), float64(right.evaluate())))
+	leftChan := make(chan float64)
+	rightChan := make(chan float64)
+	go left.evaluate(leftChan)
+	go right.evaluate(rightChan)
+	first := <-leftChan
+	second := <-rightChan
+	c <- math.Pow(first, second)
 }
 
 type SqrtNode struct {
 	subTree AST
 }
 
-func (node *SqrtNode) evaluate() int {
-	return int(math.Sqrt(float64(node.subTree.evaluate())))
+func (node *SqrtNode) evaluate(c chan float64) {
+	chann := make(chan float64)
+	/* print("here") */
+	go node.subTree.evaluate(chann)
+	sub := <-chann
+	c <- math.Sqrt(sub)
 }
